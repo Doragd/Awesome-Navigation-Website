@@ -5,7 +5,7 @@ $(document).ready(function () {
 });
 
 function include(template_name) {
-  var template_dir = "../../template/" + template_name + ".tpl";
+  var template_dir = "../template/" + template_name + ".tpl";
   var selector = "#" + template_name;
   var get_template = $.get(template_dir, function (result) {
     $(selector).html(result);
