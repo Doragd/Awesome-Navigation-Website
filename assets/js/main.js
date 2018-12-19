@@ -1,6 +1,6 @@
-$(document).ready(function() {
+$(document).ready(function () {
   initHeaderSize();
-  $(window).on("resize", function() {
+  $(window).on("resize", function () {
     scaleHeaderContainer();
   });
 });
