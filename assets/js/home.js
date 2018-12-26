@@ -3,7 +3,6 @@ $(document).ready(function () {
   include("header");
   include("footer");
   check_data();
-  render_rank();
 });
 
 function include(template_name) {
@@ -58,29 +57,32 @@ function render_data() {
   }
 }
 
+
+function get_site_json(i, github_info) {
+  if (i >= github_info.length) {
+    return;
+  }
+  var site_url = "https://raw.githubusercontent.com/" + github_info[i]["user_name"] + '/' + github_info[i]["git_name"] + '/master/site.json';
+  var git_url = "https://api.github.com/repos/" + github_info[i]["user_name"] + '/' + github_info[i]["git_name"];
+  $.get(site_url, function (info) {
+    var arr_info = JSON.parse(info);
+    $.get(git_url, function (info_add) {
+      arr_info["avatar"] = info_add["owner"]["avatar_url"];
+      arr_info["star"] = info_add["stargazers_count"];
+      arr_info["full_name"] = info_add["full_name"];
+      console.log(git_url);
+      console.log(info_add);
+      sessionStorage.setItem(i, JSON.stringify(arr_info));
+      get_site_json(i + 1, github_info);
+    });
+  });
+}
+
 function check_data() {
   $.get("../submit/getdata.php", function (result) {
     var github_info = JSON.parse(result);
     if (Object.keys(github_info).length != sessionStorage.length) {
-
-      for (i in github_info) {
-
-        var site_url = "https://raw.githubusercontent.com/" + github_info[i]["user_name"] + '/' + github_info[i]["git_name"] + '/master/site.json';
-        var git_url = "https://api.github.com/repos/" + github_info[i]["user_name"] + '/' + github_info[i]["git_name"];
-
-        $.get(site_url, function (info, status) {
-          if (status == 'success') {
-            var arr_info = JSON.parse(info);
-            $.get(git_url, function (info_add) {
-              arr_info["avatar"] = info_add["owner"]["avatar_url"];
-              arr_info["star"] = info_add["stargazers_count"];
-              arr_info["full_name"] = info_add["full_name"];
-              sessionStorage.setItem(i, JSON.stringify(arr_info));
-            });
-          }
-        });
-
-      }
+      get_site_json(0, github_info);
     }
   });
 }
@@ -103,6 +105,7 @@ function render_rank() {
   });
   $.when(get_rank_tpl).done(function () {
     var res_arr = [];
+    check_data(); /*检查是否已经获取到数据，保存到本地缓存中 */
     for (i = 0; i < sessionStorage.length; i++) {
       var res = get_rank(rank_res, i);
       res_arr.push(res);
@@ -115,6 +118,8 @@ function render_rank() {
   });
 }
 
+
+
 function get_rank(rank_res, i) {
   var rank_res = JSON.parse(JSON.stringify(rank_res));
   var data = JSON.parse(sessionStorage.getItem(i));
@@ -124,11 +129,11 @@ function get_rank(rank_res, i) {
   var star = data["star"];
   var thumbnail = data["thumbnail"];
   var url = "https://github.com/" + data["full_name"];
-  var arr_rank = [sid, thumbnail, title, name, url, star, sid];
+  var arr_rank = [sid, thumbnail, title, name, url, star, sid]; /*需要填充的参数*/
   var ix = 0;
   var rank_tpl = "";
   for (i in rank_res) {
-    if (rank_res[i] == "") {
+    if (rank_res[i] == "") { /*空串表示该位置是填充位置*/
       rank_res[i] = arr_rank[ix];
       ix += 1;
     }
@@ -136,7 +141,9 @@ function get_rank(rank_res, i) {
   }
   var res = {
     tpl: rank_tpl,
+    /* 已填充好数据的模板*/
     star: star,
+    /*单独返回star方便排序 */
     sid: sid
   };
   return res;
