@@ -16,7 +16,7 @@
         <i class="fa fa-github-alt" style="margin-right:10px;font-size:24px;" aria-hidden="true"></i>
         <span style="font-size:14px;">$$</span>
         </a>
-        <a href="../home/page.html?$$">
+        <a href="../home/page.html?id=$$">
         <i class="fa fa-arrow-right fa-4x btn-go" aria-hidden="true"></i>
         </a>
     </div>

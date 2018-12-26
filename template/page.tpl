@@ -6,7 +6,7 @@
         <div class="info-top">
             <div class="header">
                 <h2 class="vol">vol.$$</h2>
-                <h1 class="title">Realtime Board</h1>
+                <h1 class="title">$$</h1>
             </div>
         </div>
         <div class="info-middle">
@@ -20,7 +20,7 @@
                         <div class="card-name">$$</div>
                         <div class="card-des">$$</div>
                         <div class="card-symbol">
-                            <a href="$$" class="star">
+                            <a href="https://github.com/$$" class="star">
                                 <i class="fa fa-github-alt" style="margin-top:10px;margin-right:10px;font-size:20px;"
                                     aria-hidden="true"></i>
                                 <span style="font-size:14px;">$$</span>
