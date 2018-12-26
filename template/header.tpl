@@ -10,6 +10,6 @@
     <div style="height:40px;display:flex;justify-content:center;align-items:center;">
       分享站点到微信
     </div>
-    <img src="https://www.seeseed.com/public/img/header/qrcode_zh.png" alt="" />
+    <img src="../assets/img/qrcode.jpg" alt="" />
   </div>
 </div>

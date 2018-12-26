@@ -2,11 +2,10 @@ $(document).ready(function () {
   include("side");
   include("header");
   include("footer");
-  check_data();
-  render_rank();
-  render_page();
-  render_home();
+  fetch_data();
 });
+
+
 
 function include(template_name) {
   var template_dir = "../template/" + template_name + ".tpl";
@@ -16,6 +15,12 @@ function include(template_name) {
   });
   $.when(get_template).done(function () {
     render_data();
+    $(".fa-share-alt").mouseover(function () {
+      $(".pop-wechat-code").removeAttr("style");
+    });
+    $(".fa-share-alt").mouseout(function () {
+      $(".pop-wechat-code").attr("style", "display:none");
+    });
   });
 }
 
@@ -61,34 +66,42 @@ function render_data() {
 }
 
 
-function get_site_json(i, github_info) {
-  if (i >= github_info.length) {
-    return;
-  }
-  var site_url = "https://raw.githubusercontent.com/" + github_info[i]["user_name"] + '/' + github_info[i]["git_name"] + '/master/site.json';
-  var git_url = "https://api.github.com/repos/" + github_info[i]["user_name"] + '/' + github_info[i]["git_name"];
-  $.get(site_url, function (info) {
-    var arr_info = JSON.parse(info);
-    $.ajax({
-      url: git_url,
-      cache: false,
-      success: function (info_add) {
-        arr_info["avatar"] = info_add["owner"]["avatar_url"];
-        arr_info["star"] = info_add["stargazers_count"];
-        arr_info["full_name"] = info_add["full_name"];
-        sessionStorage.setItem(i, JSON.stringify(arr_info));
-        get_site_json(i + 1, github_info);
+function fetch_data() {
+  var get_data = $.ajax({
+    url: "../submit/getdata.php",
+    async: false,
+    success: function (result) {
+      var github_info = JSON.parse(result);
+      if (Object.keys(github_info).length != sessionStorage.length) {
+        for (i in github_info) {
+          var site_url = "https://raw.githubusercontent.com/" + github_info[i]["user_name"] + '/' + github_info[i]["git_name"] + '/master/site.json';
+          var git_url = "https://api.github.com/repos/" + github_info[i]["user_name"] + '/' + github_info[i]["git_name"];
+          $.ajax({
+            url: site_url,
+            async: false,
+            success: function (info) {
+              var arr_info = JSON.parse(info);
+              $.ajax({
+                url: git_url,
+                cache: false,
+                async: false,
+                success: function (info_add) {
+                  arr_info["avatar"] = info_add["owner"]["avatar_url"];
+                  arr_info["star"] = info_add["stargazers_count"];
+                  arr_info["full_name"] = info_add["full_name"];
+                  sessionStorage.setItem(i, JSON.stringify(arr_info));
+                }
+              });
+            }
+          });
+        }
       }
-    });
-  });
-}
-
-function check_data() {
-  $.get("../submit/getdata.php", function (result) {
-    var github_info = JSON.parse(result);
-    if (Object.keys(github_info).length != sessionStorage.length) {
-      get_site_json(0, github_info);
     }
+  });
+  $.when(get_data).done(function () {
+    render_home();
+    render_page();
+    render_rank();
   });
 }
 
@@ -101,7 +114,6 @@ function compare(property) {
   }
 }
 
-
 function render_rank() {
   if (location.pathname != "/rank/") {
     return;
@@ -113,7 +125,6 @@ function render_rank() {
   });
   $.when(get_rank_tpl).done(function () {
     var res_arr = [];
-    check_data(); /*检查是否已经获取到数据，保存到本地缓存中 */
     for (i = 0; i < sessionStorage.length; i++) {
       var res = get_rank(rank_res, i);
       res_arr.push(res);
@@ -125,7 +136,6 @@ function render_rank() {
     }
   });
 }
-
 
 function get_rank(rank_res, i) {
   var rank_res = JSON.parse(JSON.stringify(rank_res));
@@ -199,7 +209,6 @@ function render_page() {
     page_res = result.split('$');
   });
   $.when(get_page_tpl).done(function () {
-    check_data(); /*检查是否已经获取到数据，保存到本地缓存中 */
     for (i = 0; i < sessionStorage.length; i++) {
       var info = JSON.parse(sessionStorage.getItem(i));
       if (info["sid"] == sid) {
@@ -209,8 +218,6 @@ function render_page() {
     }
   });
 }
-
-
 
 function get_home(home_res, i) {
   var home_res = JSON.parse(JSON.stringify(home_res));
@@ -244,7 +251,6 @@ function render_home() {
   });
   $.when(get_home_tpl).done(function () {
     var res_arr = [];
-    check_data(); /*检查是否已经获取到数据，保存到本地缓存中 */
     for (i = 0; i < sessionStorage.length; i++) {
       var res = get_home(home_res, i);
       res_arr.push(res);

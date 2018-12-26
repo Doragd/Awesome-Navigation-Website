@@ -219,6 +219,18 @@ main {
   height: auto;
 }
 
+.btn-share .pop-wechat-code:before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 66px;
+  display: block;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+  border-bottom: 6px solid #fff;
+}
+
 .content {
   height: auto;
   min-height: 100%;
