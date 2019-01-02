@@ -2,7 +2,13 @@ $(document).ready(function () {
   include("side");
   include("header");
   include("footer");
-  fetch_data();
+
+  var get_data = fetch_data();
+  $.when(get_data).done(function () {
+    render_home();
+    render_page();
+    render_rank();
+  });
 });
 
 
@@ -15,11 +21,20 @@ function include(template_name) {
   });
   $.when(get_template).done(function () {
     render_data();
-    $(".fa-share-alt").mouseover(function () {
-      $(".pop-wechat-code").removeAttr("style");
+    $(".fa-share-alt").on("mouseover mouseout", function (event) {
+      if (event.type == "mouseover") {
+        $(".pop-wechat-code").removeAttr("style");
+      } else if (event.type == "mouseout") {
+        $(".pop-wechat-code").attr("style", "display:none");
+      }
+    })
+    $(".card-add").on("click", function () {
+      $(".card-input").removeAttr("style");
+      $(".card-add").attr("style", "display:none");
     });
-    $(".fa-share-alt").mouseout(function () {
-      $(".pop-wechat-code").attr("style", "display:none");
+    $(".fa-close, .fa-check").on("click", function () {
+      $(".card-add").removeAttr("style");
+      $(".card-input").attr("style", "display:none");
     });
   });
 }
@@ -68,7 +83,7 @@ function render_data() {
 
 function fetch_data() {
   var get_data = $.ajax({
-    url: "../submit/getdata.php",
+    url: "http://blog.doragd.cn/create/submit/getdata.php",
     async: false,
     success: function (result) {
       var github_info = JSON.parse(result);
@@ -80,28 +95,36 @@ function fetch_data() {
             url: site_url,
             async: false,
             success: function (info) {
-              var arr_info = JSON.parse(info);
-              $.ajax({
-                url: git_url,
-                cache: false,
-                async: false,
-                success: function (info_add) {
-                  arr_info["avatar"] = info_add["owner"]["avatar_url"];
-                  arr_info["star"] = info_add["stargazers_count"];
-                  arr_info["full_name"] = info_add["full_name"];
-                  sessionStorage.setItem(i, JSON.stringify(arr_info));
-                }
-              });
+              var flag = true;
+              try {
+                var arr_info = JSON.parse(info);
+              } catch (e) {
+                flag = false;
+                console.log('json format error:' + site_url);
+              }
+              if (flag) {
+                $.ajax({
+                  url: git_url,
+                  async: false,
+                  success: function (info_add) {
+                    arr_info["avatar"] = info_add["owner"]["avatar_url"];
+                    arr_info["star"] = info_add["stargazers_count"];
+                    arr_info["full_name"] = info_add["full_name"];
+                    sessionStorage.setItem(i, JSON.stringify(arr_info));
+                  },
+                  error: function () {
+                    console.log(git_url + ' 404');
+                  }
+                });
+              }
+            },
+            error: function () {
+              console.log(site_url + ' 404');
             }
           });
         }
       }
     }
-  });
-  $.when(get_data).done(function () {
-    render_home();
-    render_page();
-    render_rank();
   });
 }
 
@@ -110,12 +133,12 @@ function compare(property) {
   return function (a, b) {
     var value1 = a[property];
     var value2 = b[property];
-    return value1 - value2;
+    return value2 - value1;
   }
 }
 
 function render_rank() {
-  if (location.pathname != "/rank/") {
+  if (location.pathname != "/create/rank/") {
     return;
   }
   var template_dir = "../template/rank-item.tpl";
@@ -126,13 +149,19 @@ function render_rank() {
   $.when(get_rank_tpl).done(function () {
     var res_arr = [];
     for (i = 0; i < sessionStorage.length; i++) {
+
+    }
+    for (i in sessionStorage) {
+      if (sessionStorage.getItem(i) === null) {
+        continue;
+      }
       var res = get_rank(rank_res, i);
       res_arr.push(res);
     }
     res_arr.sort(compare("star"));
     for (i in res_arr) {
       $(".rank-list").append(res_arr[i]["tpl"]);
-      $(".data-v" + res_arr[i]["sid"] + " .rank-value").html(i + 1);
+      $(".data-v" + res_arr[i]["sid"] + " .rank-value").html(i);
     }
   });
 }
@@ -209,7 +238,10 @@ function render_page() {
     page_res = result.split('$');
   });
   $.when(get_page_tpl).done(function () {
-    for (i = 0; i < sessionStorage.length; i++) {
+    for (i in sessionStorage) {
+      if (sessionStorage.getItem(i) === null) {
+        continue;
+      }
       var info = JSON.parse(sessionStorage.getItem(i));
       if (info["sid"] == sid) {
         var page_tpl = get_page(page_res, info);
@@ -241,7 +273,7 @@ function get_home(home_res, i) {
 }
 
 function render_home() {
-  if (location.pathname != "/home/" && location.pathname != '/home/index.html') {
+  if (location.pathname != "/create/home/" && location.pathname != '/home/index.html') {
     return;
   }
   var template_dir = "../template/home.tpl";
@@ -250,13 +282,12 @@ function render_home() {
     home_res = result.split('$');
   });
   $.when(get_home_tpl).done(function () {
-    var res_arr = [];
-    for (i = 0; i < sessionStorage.length; i++) {
+    for (i in sessionStorage) {
+      if (sessionStorage.getItem(i) === null) {
+        continue;
+      }
       var res = get_home(home_res, i);
-      res_arr.push(res);
-    }
-    for (i in res_arr) {
-      $(".carousel-content").append(res_arr[i]);
+      $(".carousel-content").append(res);
     }
   });
 }
